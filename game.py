@@ -25,7 +25,10 @@ class Game:
         self.board = Board()
 
     def play(self, i, j):
-        self.board.move(self.current_player, i, j)
+        is_legal_move = self.board.move(self.current_player.color, i, j)
+        if not is_legal_move:
+            return False
+
         if self.is_over():
             _, winner = self.board.winner()
             print '{} is the winner'.format(winner)

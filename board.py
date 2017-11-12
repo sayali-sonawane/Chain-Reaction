@@ -22,7 +22,7 @@ class Board:
         # 1 - player 1
         # 2 - player 2
         self.distribution = np.ones((self.width, self.height)) * np.nan
-        self.fresh_move = False
+        self.fresh_move = True
 
     def get_available_moves(self, player):
         """
@@ -90,6 +90,8 @@ class Board:
             # Start chain reaction.
             self._chain(player, i, j)
 
+        return True
+
     def _chain(self, player, i, j):
         if i < 0 or j < 0 or i == self.width or j == self.height:
             return
@@ -98,10 +100,10 @@ class Board:
         if self.board[i][j] == critical_mass - 1:
             self.board[i][j] = 0
             self.distribution[i][j] = np.nan
-            self.chain(player, i+1, j)
-            self.chain(player, i, j+1)
-            self.chain(player, i-1, j)
-            self.chain(player, i, j-1)
+            self._chain(player, i+1, j)
+            self._chain(player, i, j+1)
+            self._chain(player, i-1, j)
+            self._chain(player, i, j-1)
         else:
             self.distribution[i][j] = signature_map(player)
             self.board[i][j] += 1
@@ -141,7 +143,8 @@ class Board:
             Indicates if the Game is Over.
         :return: {Boolean} True if the game is over else False
         """
-        return self.winner()
+        is_winner, _ = self.winner()
+        return is_winner
 
     def reset(self):
         """
