@@ -22,6 +22,7 @@ class Board:
         # 1 - player 1
         # 2 - player 2
         self.distribution = np.ones((self.width, self.height)) * np.nan
+        self.fresh_move = False
 
     def get_available_moves(self, player):
         """
@@ -79,8 +80,15 @@ class Board:
         """
         if not self.is_move_allowed(player, i, j):
             return False
+        if self.board[i][j] != self.get_max_critical_mass_for_cell(i, j) - 1:
+            self.fresh_move = True
+            self.distribution[i][j] = signature_map(player)
+            self.board[i][j] += 1
 
-        self._chain(player, i, j)
+        else:
+            self.fresh_move = False
+            # Start chain reaction.
+            self._chain(player, i, j)
 
     def _chain(self, player, i, j):
         if i < 0 or j < 0 or i == self.width or j == self.height:
@@ -101,13 +109,19 @@ class Board:
     def reward(self):
         pass
 
-    def is_winner(self):
-        # TODO: To be modified.
-        # Winner is defined only when a chain rection occurs and
-        # the other player's orbs are destroyed.
+    def winner(self):
+        """
+            Winner is defined only when a chain rection occurs and
+            the all the other player's orbs are destroyed.
+        :return: {Boolean} If a winner exists else False.
+        """
 
         player_1_count = 0
         player_2_count = 0
+
+        if self.fresh_move:
+            return False, False
+
         for i in range(self.width):
             for j in range(self.height):
                 if self.distribution[i][j] == 1:
@@ -127,7 +141,7 @@ class Board:
             Indicates if the Game is Over.
         :return: {Boolean} True if the game is over else False
         """
-        return self.is_winner()
+        return self.winner()
 
     def reset(self):
         """
