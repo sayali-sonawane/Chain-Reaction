@@ -60,19 +60,39 @@ class Board:
         return np.isnan(self.distribution[i][j]) or self.distribution[i][j] == player
 
     def move(self, player, i, j):
+        """
+            Contains the Logic to make a move for the player,
+            Populates the grid with the configuration after the move.
+
+            The Logic is as follows:
+            If a cell is loaded with a number of orbs equal to its critical mass,the stack explodes.
+            To each of the orthogonally adjacent cells, an orb is added and the initial cell looses
+            as many orbs as its critical mass. The explosions might result in overloading of an adjacent cell and
+            the chain reaction of explosion continues until every cell is stable.
+        :param player: Player who has to make a move
+        :param i: Row of the board
+        :param j: Column of the board
+        """
         if not self.is_move_allowed(player, i, j):
             return False
 
+        self._chain(player, i, j)
+
+    def _chain(self, player, i, j):
+        if i < 0 or j < 0 or i == self.width or j == self.height:
+            return
+
         critical_mass = self.get_max_critical_mass_for_cell(i, j)
-
         if self.board[i][j] == critical_mass - 1:
-            # Start Chain Reaction
-            pass
+            self.board[i][j] = 0
+            self.distribution[i][j] = np.nan
+            self.chain(player, i+1, j)
+            self.chain(player, i, j+1)
+            self.chain(player, i-1, j)
+            self.chain(player, i, j-1)
         else:
+            self.distribution[i][j] = signature_map(player)
             self.board[i][j] += 1
-
-    def chain(self):
-        pass
 
     def reward(self):
         pass
@@ -97,7 +117,7 @@ class Board:
     def is_over(self):
         """
             Indicates if the Game is Over.
-        :return:
+        :return: {Boolean} True if the game is over else False
         """
         return self.is_winner()
 
