@@ -1,3 +1,7 @@
+"""
+    Board Module: defines the Board and the features required for the game.
+"""
+
 import numpy as np
 
 signature_map = lambda player: 1 if player == 'green' else 0
@@ -98,6 +102,10 @@ class Board:
         pass
 
     def is_winner(self):
+        # TODO: To be modified.
+        # Winner is defined only when a chain rection occurs and
+        # the other player's orbs are destroyed.
+
         player_1_count = 0
         player_2_count = 0
         for i in range(self.width):
