@@ -55,3 +55,9 @@ class Game:
         :return:
         """
         self.board.reset()
+
+    def get_current_player(self):
+        return self.current_player
+
+    def get_board(self):
+        return self.board
