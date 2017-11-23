@@ -152,3 +152,6 @@ class Board:
         """
         self.board = np.zeros((self.width, self.height))
         self.distribution = np.ones((self.width, self.height)) * np.nan
+
+    def give_board_status(self):
+        return self.board, self.distribution
