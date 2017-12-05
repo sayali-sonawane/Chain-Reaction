@@ -12,6 +12,21 @@ class Player(object):
         self.color = color
 
 
+class HumanPlayer(Player):
+    pass
+
+
+class ComputerPlayer(Player):
+    pass
+
+
+class QPlayer(ComputerPlayer):
+    def __init__(self, color, Q={}, epsilon=0.8):
+        super(QPlayer, self).__init__(color=color)
+        self.Q = Q
+        self.epsilon = epsilon
+
+
 class Game:
     """
         Defines a Two Player Game and it's rules

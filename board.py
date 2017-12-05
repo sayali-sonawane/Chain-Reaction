@@ -13,7 +13,7 @@ class Board:
         Defines the Board for Chain-Reaction
     """
 
-    def __init__(self, width=5, height=5):
+    def __init__(self, width=3, height=3):
         self.width = width
         self.height = height
         self.board = np.zeros((self.width, self.height))
@@ -155,3 +155,34 @@ class Board:
 
     def give_board_status(self):
         return self.board, self.distribution
+
+    def get_board_rep(self, player):
+        """
+            Creates the representation of the board, (state).
+            1. a,b,c belonging to player one indicate 1,2,3 orbs respectively
+            2. x,y,z belonging to player two indicate 1,2,3 orbs respectively
+        :return: {String} Returns the representation
+        """
+        dummy_distribution, dummy_positions = self.give_board_status()
+        dummy_positions = np.ndarray.flatten(dummy_positions)
+        dummy_distribution = np.ndarray.flatten(dummy_distribution)
+        board_rep = [0]*len(dummy_positions)
+        for index, position in enumerate(dummy_positions):
+            if position == 0:
+                if dummy_distribution[index] == 1:
+                    board_rep[index] = 'a'
+                elif dummy_distribution[index] == 2:
+                    board_rep[index] = 'b'
+                elif dummy_distribution[index] == 3:
+                    board_rep[index] = 'c'
+            if position == 1:
+                if dummy_distribution[index] == 1:
+                    board_rep[index] = 'x'
+                elif dummy_distribution[index] == 2:
+                    board_rep[index] = 'y'
+                elif dummy_distribution[index] == 3:
+                    board_rep[index] = 'z'
+
+        rep = "".join(str(x) for x in board_rep)
+        rep += str(signature_map(player.color))
+        return rep
