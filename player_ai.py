@@ -21,7 +21,7 @@ class AIPlay:
     # param player - player to be randomized
     # gets the available move and chooses a random move
     def get_random_move(self, player):
-        states = self.get_possible_states(player)
+        states = self.get_possible_states(player.color)
         move = states[random.randrange(0, len(states))]
         return move[0], move[-1]
 
@@ -57,7 +57,7 @@ class AIPlay:
         chosen_after_state_rep, chosen_after_state = max(value_addition, key=lambda key: value_addition[key])
         bracket = value_addition[chosen_after_state_rep, chosen_after_state] - self.value_dict[current_rep]
         self.value_dict[current_rep] = self.value_dict[current_rep] + self.discount*bracket
-        #print(self.value_dict)
+
         return chosen_after_state[0], chosen_after_state[-1]
 
     # Returns the possible states
