@@ -90,7 +90,7 @@ class Board:
             self.board[i][j] += 1
 
             if blocks:
-                text = str(self.board[i][j])
+                text = str(int(self.board[i][j]))
                 blocks[i][j].configure(fg=player, text=text)
 
         else:
@@ -122,7 +122,7 @@ class Board:
             self.board[i][j] += 1
 
             if blocks:
-                text = str(self.board[i][j])
+                text = str(int(self.board[i][j]))
                 blocks[i][j].configure(fg=player, text=text)
 
     def winner(self):
