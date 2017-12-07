@@ -2,6 +2,9 @@
     Game Module: defines the game and the rules of the game.
 """
 from board import Board
+import Tkinter as tk
+
+BLOCK_DEFAULT_COLOR = 'black'
 
 
 class Player(object):
@@ -12,35 +15,23 @@ class Player(object):
         self.color = color
 
 
-class HumanPlayer(Player):
-    pass
-
-
-class ComputerPlayer(Player):
-    pass
-
-
-class QPlayer(ComputerPlayer):
-    def __init__(self, color, Q={}, epsilon=0.8):
-        super(QPlayer, self).__init__(color=color)
-        self.Q = Q
-        self.epsilon = epsilon
-
-
 class Game:
     """
         Defines a Two Player Game and it's rules
     """
 
-    def __init__(self, player_one, player_two):
+    def __init__(self, root, player_one, player_two):
         self.player_one = player_one
         self.player_two = player_two
         self.current_player = self.player_one
         self.other_player = self.player_two
         self.board = Board()
+        self.blocks = None
+        if root:
+            self.initialize_tk_frame(root)
 
     def play(self, i, j):
-        is_legal_move = self.board.move(self.current_player.color, i, j)
+        is_legal_move = self.board.move(self.current_player.color, i, j, self.blocks)
         if not is_legal_move:
             return False
 
@@ -49,6 +40,37 @@ class Game:
             print '{} is the winner'.format(winner)
         else:
             self.switch_players()
+
+    def get_move(self, button):
+        info = button.grid_info()
+        move = (int(info["row"]), int(info["column"]))  # Get move coordinates from the button's metadata
+        return move
+
+    def handle_move(self, button):
+        move = self.get_move(button)
+        i, j = move
+        self.play(i, j)
+
+    def initialize_tk_frame(self, root):
+        """
+            Initializes Tk Frame for the game.
+        :return:
+        """
+        frame = tk.Frame(root)
+        frame.grid()
+
+        self.blocks = [[None for _ in range(self.board.height)] for _ in range(self.board.width)]
+
+        for i in range(self.board.width):
+            for j in range(self.board.height):
+                self.blocks[i][j] = tk.Button(frame, height=3, width=3, text="", bg=BLOCK_DEFAULT_COLOR,
+                                              command=lambda i=i, j=j: self.handle_move(self.blocks[i][j]))
+                self.blocks[i][j].grid(row=i, column=j)
+
+        self.reset_button = tk.Button(text="Reset", command=self.board.reset())
+        self.reset_button.grid(row=5)
+
+        return frame
 
     def switch_players(self):
         if self.current_player == self.player_one:

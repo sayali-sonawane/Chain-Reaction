@@ -7,6 +7,8 @@ import numpy as np
 signature_map = lambda player: 1 if player == 'green' else 0
 player_map = lambda sign: 'green' if sign == 1 else 'red'
 
+BLOCK_DEFAULT_COLOR = 'black'
+
 
 class Board:
     """
@@ -16,6 +18,7 @@ class Board:
     def __init__(self, width=5, height=5):
         self.width = width
         self.height = height
+
         self.board = np.zeros((self.width, self.height))
 
         # indicates which player places his orb in a cell.
@@ -65,7 +68,7 @@ class Board:
         player = signature_map(player)
         return np.isnan(self.distribution[i][j]) or self.distribution[i][j] == player
 
-    def move(self, player, i, j):
+    def move(self, player, i, j, blocks=None):
         """
             Contains the Logic to make a move for the player,
             Populates the grid with the configuration after the move.
@@ -86,14 +89,18 @@ class Board:
             self.distribution[i][j] = signature_map(player)
             self.board[i][j] += 1
 
+            if blocks:
+                text = str(self.board[i][j])
+                blocks[i][j].configure(fg=player, text=text)
+
         else:
             self.fresh_move = False
             # Start chain reaction.
-            self._chain(player, i, j)
+            self._chain(player, i, j, blocks)
 
         return True
 
-    def _chain(self, player, i, j):
+    def _chain(self, player, i, j, blocks=None):
         if i < 0 or j < 0 or i == self.width or j == self.height:
             return
 
@@ -101,16 +108,22 @@ class Board:
         if self.board[i][j] == critical_mass - 1:
             self.board[i][j] = 0
             self.distribution[i][j] = np.nan
-            self._chain(player, i+1, j)
-            self._chain(player, i, j+1)
-            self._chain(player, i-1, j)
-            self._chain(player, i, j-1)
+
+            if blocks:
+                empty_block_text = ''
+                blocks[i][j].configure(bg=BLOCK_DEFAULT_COLOR, text=empty_block_text)
+
+            self._chain(player, i+1, j, blocks)
+            self._chain(player, i, j+1, blocks)
+            self._chain(player, i-1, j, blocks)
+            self._chain(player, i, j-1, blocks)
         else:
             self.distribution[i][j] = signature_map(player)
             self.board[i][j] += 1
 
-    def reward(self):
-        pass
+            if blocks:
+                text = str(self.board[i][j])
+                blocks[i][j].configure(fg=player, text=text)
 
     def winner(self):
         """
