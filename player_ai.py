@@ -34,7 +34,7 @@ class AIPlay:
     # 4. For each move, computes the afterstate, board representation and expected value addition
     # 5. Chooses the move with best value addition
     # 6. Updates the value dictionary
-    def get_ai_move(self, player):
+    def get_move(self, player):
         value_addition = {}
         current_rep = self.get_board_rep(self.game.get_board())
 
