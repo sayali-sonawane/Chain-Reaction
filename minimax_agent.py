@@ -4,8 +4,6 @@
     :example: An instance of the class can be made in the following way:
 
 """
-import utils
-
 from board import signature_map
 
 switch_player = lambda x: 'green' if x == 'red' else 'red'
@@ -42,6 +40,7 @@ class MinimaxAgent:
         reward_dict = {}
 
         best_value = self.get_best_move(agent_type)
+
         # Get rewards for all moves.
         for move in moves:
             board_after_move = board.get_dummy_board_after_move(move, player)
