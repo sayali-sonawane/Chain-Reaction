@@ -38,6 +38,7 @@ class StdPlay:
     def get_possible_states(self, player):
         return (self.game.get_board()).get_available_moves(player)
 
+
     # Gives the expected immediate reward after the move
     def get_afterstate_reward(self, current_rep, afterstate_rep, player_col):
         if 'a' not in afterstate_rep and 'b' not in afterstate_rep and 'c' not in afterstate_rep:
