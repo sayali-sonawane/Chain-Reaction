@@ -32,8 +32,8 @@ import Tkinter as Tk
 
 BLOCK_DEFAULT_COLOR = 'black'
 
-WIDTH = 5
-HEIGHT = 5
+WIDTH = 3
+HEIGHT = 3
 
 
 def initialize_tk_frame(root, agent):
@@ -69,11 +69,12 @@ if __name__ == "__main__":
     # mode = 0 - Testing
     # mode = 1 - Training
     # mode = 2 - AI_testing
-    # player = 0 - Q_agent
-    # player = 1 - Value_agent
+    # player = 0 - value_Agent
+    # player = 1 - q_Agent
+    # player = 2 - q_feature
 
-    mode = 2
-    player = 4
+    mode = 0
+    player = 1
     training = None
     blocks = None
     iterations = 100
@@ -86,15 +87,15 @@ if __name__ == "__main__":
     game = Game(blocks, player_one, player_two, WIDTH, HEIGHT)
 
     # If in Testing mode, load the training data
-    if mode != 1 and player != 4:
+    if mode != 1:
         # load value agent training
-        if player == 1:
+        if player == 0:
             with open('training_10th.pickle', 'rb') as handle:
                 training = pickle.load(handle)
                 print(len(training))
                 #print(training)
-        elif player == 3:
-            with open('training_self.pickle', 'rb') as handle:
+        elif player == 1:
+            with open('training_Q_1000000.pickle', 'rb') as handle:
                 training = pickle.load(handle)
                 print(len(training))
         # load q agent training
@@ -106,22 +107,18 @@ if __name__ == "__main__":
     # Initialize Agents.
 
     value_agent = AIPlay(game, training)
-    value_agent_op = AIPlay(game, training)
     q_agent = QValueAgent(game, training)
     q_feature = qFeatureAgent(game, feature_weight)
     std_agent = StdPlay(game)
     # Set Player agents
-    if player == 0:
+    agent_1 = std_agent
+
+    if player == 1:
         agent = q_agent
-    elif player == 1:
+    elif player == 0:
         agent = value_agent
-        agent_1 = std_agent
     elif player == 2:
-        agent_1 = value_agent
-        agent_2 = q_agent
-    elif player == 4:
         agent = q_feature
-        agent_1 = std_agent
     else:
         agent = value_agent
 
@@ -148,36 +145,20 @@ if __name__ == "__main__":
                     game.reset()
                     break
                 if game.get_current_player() == player_one:
-                    if player == 2:
-                        i, j = agent_1.get_move(player_one)
-                    elif player == 3:
-                        i, j = agent.get_move(player_one)
-                    elif player == 1:
-                        i, j = agent_1.get_move(player_one)
-                    elif player == 4:
-                        i, j = agent_1.get_move(player_one)
-                    else:
-                        i, j = agent.get_random_move(player_one)
+                    i, j = agent.get_random_move(player_one)
                 else:
-                    if player == 2:
-                        i, j = agent_2.get_move(player_two)
-                    elif player == 3:
-                        i, j = agent.get_move(player_two)
-                    elif player == 1:
-                        i, j = agent.get_move(player_two)
-                    else:
-                        i, j = agent.get_move(player_two)
+                    i, j = agent.get_move(player_two)
                 game.play(int(i), int(j))
 
         # If all modes, dump all the training in a file
-    if mode != 5 and player != 4:
-        if player == 1:
+    if mode == 1:
+        if player == 0:
             # save value agent training
             with open('training_10th.pickle', 'wb') as handle:
                 pickle.dump(value_agent.value_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-        elif player == 3:
-            with open('training_self.pickle', 'wb') as handle:
+        elif player == 1:
+            with open('training_Q_1000000.pickle', 'wb') as handle:
                 pickle.dump(value_agent.value_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
         else:
             # save q_agent training
