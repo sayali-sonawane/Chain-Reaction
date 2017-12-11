@@ -22,8 +22,10 @@
 
 from game import Game, Player
 from player_ai import AIPlay
-from q_value import QValueAgent
+
+from q_agent import QValueAgent
 from standard_player import StdPlay
+
 import pickle
 import Tkinter as Tk
 
