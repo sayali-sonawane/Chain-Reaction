@@ -211,4 +211,4 @@ class Board:
         i, j = move
         dummy_board.move(player, i, j)
 
-        return dummy_board.get_board_rep()
+        return dummy_board
