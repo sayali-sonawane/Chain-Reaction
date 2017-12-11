@@ -22,15 +22,18 @@
 
 from game import Game, Player
 from player_ai import AIPlay
+
 from q_agent import QValueAgent
+from standard_player import StdPlay
+from q_feature import qFeatureAgent
 
 import pickle
 import Tkinter as Tk
 
 BLOCK_DEFAULT_COLOR = 'black'
 
-WIDTH = 5
-HEIGHT = 5
+WIDTH = 3
+HEIGHT = 3
 
 
 def initialize_tk_frame(root, agent):
@@ -54,6 +57,7 @@ def initialize_tk_frame(root, agent):
 
     return blocks
 
+
 if __name__ == "__main__":
 
     player_one = Player("red")
@@ -62,27 +66,60 @@ if __name__ == "__main__":
     win_stats = {'red': 0, 'green': 0}
 
     # initialize Configurations for Game.
+    # mode = 0 - Testing
+    # mode = 1 - Training
+    # mode = 2 - AI_testing
+    # player = 0 - value_Agent
+    # player = 1 - q_Agent
+    # player = 2 - q_feature
+
     mode = 0
+    player = 1
     training = None
     blocks = None
-    iterations = 1000
+    iterations = 100
     agent = None
+    agent_1 = None
+    agent_2 = None
+    feature_weight = None
 
-    # Initailize Game
-    game = Game(blocks, player_one, player_two)
+    # Initialize Game
+    game = Game(blocks, player_one, player_two, WIDTH, HEIGHT)
 
-    if mode == 0:
-        with open('training_Q_values.pickle', 'rb') as handle:
-            training = pickle.load(handle)
+    # If in Testing mode, load the training data
+    if mode != 1:
+        # load value agent training
+        if player == 0:
+            with open('training_10th.pickle', 'rb') as handle:
+                training = pickle.load(handle)
+                print(len(training))
+                #print(training)
+        elif player == 1:
+            with open('training_Q_1000000.pickle', 'rb') as handle:
+                training = pickle.load(handle)
+                print(len(training))
+        # load q agent training
+        else:
+            with open('training_Q.pickle', 'rb') as handle:
+                training = pickle.load(handle)
 
     print "training loaded"
     # Initialize Agents.
+
     value_agent = AIPlay(game, training)
     q_agent = QValueAgent(game, training)
+    q_feature = qFeatureAgent(game, feature_weight)
+    std_agent = StdPlay(game)
+    # Set Player agents
+    agent_1 = std_agent
 
-    if mode == 2:
+    if player == 1:
         agent = q_agent
-    if mode == 1:
+    elif player == 0:
+        agent = value_agent
+    elif player == 2:
+        agent = q_feature
+    else:
         agent = value_agent
 
     # Use previous training in testing mode
@@ -91,33 +128,41 @@ if __name__ == "__main__":
         root.title("Chain Reaction Game")
 
         # Choose agent for testing.
-        agent = q_agent
-        blocks = initialize_tk_frame(root, q_agent)
+        blocks = initialize_tk_frame(root, agent)
         game.blocks = blocks
         root.mainloop()
 
     else:
-        for _ in range(iterations):
+        for i in range(iterations):
+            print(i)
             while True:
                 print game.board.board
                 print game.board.distribution
                 if game.is_over():
                     _, winner = game.get_board().winner()
                     win_stats[winner] = win_stats[winner] + 1
+                    agent.update(player_two)
                     game.reset()
                     break
                 if game.get_current_player() == player_one:
                     i, j = agent.get_random_move(player_one)
                 else:
-                    agent.get_move(player_two)
-
+                    i, j = agent.get_move(player_two)
                 game.play(int(i), int(j))
 
-        # If in training mode, dump all the training in a file
-        if mode == 1:
-            with open('training_value.pickle', 'wb') as handle:
+        # If all modes, dump all the training in a file
+    if mode == 1:
+        if player == 0:
+            # save value agent training
+            with open('training_10th.pickle', 'wb') as handle:
                 pickle.dump(value_agent.value_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
-        if mode == 2:
+
+        elif player == 1:
+            with open('training_Q_1000000.pickle', 'wb') as handle:
+                pickle.dump(value_agent.value_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        else:
+            # save q_agent training
             with open('training_Q.pickle', 'wb') as handle:
                 pickle.dump(q_agent.q_values, handle, protocol=pickle.HIGHEST_PROTOCOL)
-        print(win_stats)
+
+    print(win_stats)
