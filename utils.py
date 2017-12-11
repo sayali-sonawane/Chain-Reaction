@@ -18,3 +18,8 @@ def get_rand_argmax_key(dict_value):
             values.append(i)
 
     return random.choice(values)
+
+
+def get_random_move(player, board):
+    states = board.get_available_moves(player.color)
+    return states[random.randrange(0, len(states))]
