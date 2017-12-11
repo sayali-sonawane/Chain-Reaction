@@ -1,7 +1,7 @@
 """
     Game Module: defines the game and the rules of the game.
 """
-from board import Board
+from q_feature_board import QFeatureBoard
 
 
 class Player(object):
@@ -24,7 +24,7 @@ class Game:
         self.other_player = self.player_two
         self.width = width
         self.height = height
-        self.board = Board(width, height)
+        self.board = QFeatureBoard(width, height)
         self.blocks = blocks
 
     def play(self, i, j):

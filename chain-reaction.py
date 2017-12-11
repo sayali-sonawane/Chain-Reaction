@@ -25,14 +25,15 @@ from player_ai import AIPlay
 
 from q_agent import QValueAgent
 from standard_player import StdPlay
+from q_feature import qFeatureAgent
 
 import pickle
 import Tkinter as Tk
 
 BLOCK_DEFAULT_COLOR = 'black'
 
-WIDTH = 3
-HEIGHT = 3
+WIDTH = 5
+HEIGHT = 5
 
 
 def initialize_tk_frame(root, agent):
@@ -72,19 +73,20 @@ if __name__ == "__main__":
     # player = 1 - Value_agent
 
     mode = 2
-    player = 1
+    player = 4
     training = None
     blocks = None
     iterations = 100
     agent = None
     agent_1 = None
     agent_2 = None
+    feature_weight = None
 
     # Initialize Game
     game = Game(blocks, player_one, player_two, WIDTH, HEIGHT)
 
     # If in Testing mode, load the training data
-    if mode != 1:
+    if mode != 1 and player != 4:
         # load value agent training
         if player == 1:
             with open('training_10th.pickle', 'rb') as handle:
@@ -106,6 +108,7 @@ if __name__ == "__main__":
     value_agent = AIPlay(game, training)
     value_agent_op = AIPlay(game, training)
     q_agent = QValueAgent(game, training)
+    q_feature = qFeatureAgent(game, feature_weight)
     std_agent = StdPlay(game)
     # Set Player agents
     if player == 0:
@@ -116,6 +119,9 @@ if __name__ == "__main__":
     elif player == 2:
         agent_1 = value_agent
         agent_2 = q_agent
+    elif player == 4:
+        agent = q_feature
+        agent_1 = std_agent
     else:
         agent = value_agent
 
@@ -148,6 +154,8 @@ if __name__ == "__main__":
                         i, j = agent.get_move(player_one)
                     elif player == 1:
                         i, j = agent_1.get_move(player_one)
+                    elif player == 4:
+                        i, j = agent_1.get_move(player_one)
                     else:
                         i, j = agent.get_random_move(player_one)
                 else:
@@ -162,7 +170,7 @@ if __name__ == "__main__":
                 game.play(int(i), int(j))
 
         # If all modes, dump all the training in a file
-    if mode != 5:
+    if mode != 5 and player != 4:
         if player == 1:
             # save value agent training
             with open('training_10th.pickle', 'wb') as handle:
