@@ -59,7 +59,7 @@ class Game:
         is_legal = self.play(i, j)
 
         # If the human move was legal and has a GUI.
-        if is_legal and self.blocks:
+        if is_legal:
             i, j = self.handle_ai_play(agent)
             self.play(i, j)
 
@@ -88,6 +88,8 @@ class Game:
         """
         self.board.reset()
         self.reset_blocks()
+        self.current_player = self.player_one
+        self.other_player = self.player_two
 
     def reset_blocks(self):
         """
