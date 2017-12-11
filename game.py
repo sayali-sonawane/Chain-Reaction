@@ -88,6 +88,8 @@ class Game:
         """
         self.board.reset()
         self.reset_blocks()
+        self.current_player = self.player_one
+        self.other_player = self.player_two
 
     def reset_blocks(self):
         """

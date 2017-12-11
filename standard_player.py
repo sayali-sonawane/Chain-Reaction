@@ -1,7 +1,7 @@
 from board import Board
 import copy
 import numpy as np
-
+import random
 # Standard player playing with a greedy strategy
 # Intended to be used as metric for evaluation of learning methods
 
@@ -26,7 +26,15 @@ class StdPlay:
                 value_addition[after_state_rep, state] = reward
 
         chosen_after_state_rep, chosen_after_state = max(value_addition, key=lambda key: value_addition[key])
-        return chosen_after_state[0], chosen_after_state[-1]
+
+        choices = []
+        for item in value_addition:
+
+            if value_addition[item] == value_addition[chosen_after_state_rep,chosen_after_state]:
+                choices.append(item[-1])
+
+        random_max_after_state = random.choice(choices)
+        return random_max_after_state[0], random_max_after_state[-1]
 
     # Returns the possible states
     def get_possible_states(self, player):

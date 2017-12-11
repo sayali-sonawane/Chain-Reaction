@@ -11,19 +11,30 @@ class AIPlay:
         self.game = game_cr
         self.dummy_board = Board()
         self.discount = 0.5
+        self.prev_move_1 = ''
+        self.prev_move_2 = ''
+
         # learning mode
         if training_dict:
             self.value_dict = dict(training_dict)
+            self.epsilon = 0.98
         else:
             self.value_dict = {}
+            self.epsilon = 0.2
 
     # Get a random move to play
     # param player - player to be randomized
     # gets the available move and chooses a random move
     def get_random_move(self, player):
         states = self.get_possible_states(player.color)
-        move = states[random.randrange(0, len(states))]
-        return move[0], move[-1]
+        for i in states:
+            rep = self.get_afterstate(player.color, i)
+            rep = self.get_board_rep(rep)
+            if rep not in self.value_dict:
+                return i[0], i[-1]
+            else:
+                move = states[random.randrange(0, len(states))]
+                return move[0], move[-1]
 
     # Get a move to play from the ai
     # param player - player to be ai'd
@@ -37,28 +48,78 @@ class AIPlay:
     def get_move(self, player):
         value_addition = {}
         current_rep = self.get_board_rep(self.game.get_board())
+        random_num = random.random()
 
-        if current_rep not in self.value_dict:
-            self.value_dict[current_rep] = 0
+        if player.color == 'red':
+            if self.prev_move_1 == '':
+                self.prev_move_1 = current_rep
 
-        states = self.get_possible_states(player.color)
+            if self.prev_move_1 not in self.value_dict:
+                self.value_dict[self.prev_move_1] = 0
+        else:
+            if self.prev_move_2 == '':
+                self.prev_move_2 = current_rep
 
-        for state in states:
-            after_state = self.get_afterstate(player.color, state)
-            after_state_rep = self.get_board_rep(after_state)
+            if self.prev_move_2 not in self.value_dict:
+                self.value_dict[self.prev_move_2] = 0
 
-            if after_state_rep != current_rep:
-                reward = self.get_afterstate_reward(current_rep, after_state_rep)
-                if after_state_rep in self.value_dict:
-                    value_addition[after_state_rep, state] = reward + self.value_dict[after_state_rep]
-                else:
-                    value_addition[after_state_rep, state] = reward
+        if random_num < self.epsilon:
 
-        chosen_after_state_rep, chosen_after_state = max(value_addition, key=lambda key: value_addition[key])
-        bracket = value_addition[chosen_after_state_rep, chosen_after_state] - self.value_dict[current_rep]
-        self.value_dict[current_rep] = self.value_dict[current_rep] + self.discount*bracket
+            states = self.get_possible_states(player.color)
 
+            for state in states:
+                after_state = self.get_afterstate(player.color, state)
+                after_state_rep = self.get_board_rep(after_state)
+
+                if after_state_rep != current_rep:
+                    reward = self.get_afterstate_reward(current_rep, after_state_rep, player.color)
+                    if after_state_rep in self.value_dict:
+                        val = self.value_dict[after_state_rep]
+                        value_addition[after_state_rep, state] = reward + self.value_dict[after_state_rep]
+                    else:
+                        value_addition[after_state_rep, state] = reward
+            chosen_after_state_rep, chosen_after_state = max(value_addition, key=lambda key: value_addition[key])
+
+        else:
+            i, j = self.get_random_move(player)
+            after_state = self.get_afterstate(player.color, (i, j))
+            chosen_after_state = (i, j)
+            chosen_after_state_rep = self.get_board_rep(after_state)
+            reward = 0
+            if chosen_after_state_rep != current_rep:
+                reward = self.get_afterstate_reward(current_rep, chosen_after_state_rep, player.color)
+            if chosen_after_state_rep in self.value_dict:
+                val = self.value_dict[chosen_after_state_rep]
+                value_addition[chosen_after_state_rep, (i, j)] = reward + self.value_dict[chosen_after_state_rep]
+            else:
+                value_addition[chosen_after_state_rep, (i, j)] = reward
+
+        if player.color == 'red':
+            bracket = value_addition[chosen_after_state_rep, chosen_after_state] - self.value_dict[self.prev_move_1]
+            self.value_dict[self.prev_move_1] = self.value_dict[self.prev_move_1] + self.discount*bracket
+            self.prev_move_1 = chosen_after_state_rep
+        else:
+            bracket = value_addition[chosen_after_state_rep, chosen_after_state] - self.value_dict[self.prev_move_2]
+            self.value_dict[self.prev_move_2] = self.value_dict[self.prev_move_2] + self.discount*bracket
+            self.prev_move_2 = chosen_after_state_rep
         return chosen_after_state[0], chosen_after_state[-1]
+
+    def update(self, player):
+        current_rep = self.get_board_rep(self.game.get_board())
+        val = self.get_afterstate_reward(self.prev_move_2, current_rep, player.color)
+        if self.prev_move_2 != '':
+            if self.prev_move_2 in self.value_dict:
+                self.value_dict[self.prev_move_2] = self.discount*val + self.value_dict[self.prev_move_2]
+            else:
+                self.value_dict[self.prev_move_2] = self.discount * val
+            self.prev_move_2 = ''
+        elif self.prev_move_1 != '':
+            if self.prev_move_1 in self.value_dict:
+                self.value_dict[self.prev_move_1] = self.discount*val + self.value_dict[self.prev_move_1]
+            else:
+                self.value_dict[self.prev_move_1] = self.discount * val
+            self.prev_move_1 = ''
+
 
     # Returns the possible states
     def get_possible_states(self, player):
@@ -92,24 +153,50 @@ class AIPlay:
         return rep
 
     # Gives the expected immediate reward after the move
-    def get_afterstate_reward(self, current_rep, afterstate_rep):
+    def get_afterstate_reward(self, current_rep, afterstate_rep, player_col):
         if 'a' not in afterstate_rep and 'b' not in afterstate_rep and 'c' not in afterstate_rep:
-            return 1000
-        if 'x' not in afterstate_rep and 'y' not in afterstate_rep and 'z' not in afterstate_rep:
-            return -1000
+            if player_col == 'green':
+                if self.find_score(current_rep, player_col) != 0:
+                    return 1000
+                else:
+                    return -0.1
+            else:
+                if self.find_score(current_rep, player_col) != 0:
+                    return -1000
+                else:
+                    return -0.1
+        elif 'x' not in afterstate_rep and 'y' not in afterstate_rep and 'z' not in afterstate_rep:
+            if player_col == 'green':
+                if self.find_score(current_rep, player_col) != 0:
+                    return -1000
+                else:
+                    return -0.1
+            else:
+                if self.find_score(current_rep, player_col) != 0:
+                    return 1000
+                else:
+                    return -0.1
 
-        a = self.find_score(afterstate_rep)
-        b = self.find_score(current_rep)
+        else:
+            return -0.1
 
-        if a > b:
-            return (a - b)*2 + 10
-        if a <= b:
-            return (a - b)*2 - 10
-        return 0
+        # a = self.find_score(afterstate_rep, player_col)
+        # b = self.find_score(current_rep, player_col)
+        #
+        # if a > b:
+        #     k = (a - b)*2 + 10
+        #     return k*0.5
+        # if a <= b:
+        #     k = (a - b)*2 - 10
+        #     return k*0.5
+        # return 0
 
-    def find_score(self, afterstate_rep):
+    def find_score(self, afterstate_rep, player_col):
         rep = list(afterstate_rep)
-        score = rep.count('x') + rep.count('y')*3 + rep.count('z')*5
+        if player_col == 'green':
+            score = rep.count('x') + rep.count('y')*3 + rep.count('z')*5
+        else:
+            score = rep.count('a') + rep.count('b')*3 + rep.count('c')*5
         return score
 
     # Gives the afterstate after a certain player plays a move
